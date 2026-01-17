@@ -41,4 +41,25 @@ Devvit.addMenuItem({
   },
 });
 
+Devvit.addCustomPostType({
+  name: 'Redartulous Game',
+  render: (context) => {
+    return (
+      <vstack height="100%" width="100%" alignment="middle center" gap="medium">
+        <text size="large" weight="bold">
+          Redartulous
+        </text>
+        <text size="small">Tap below to launch the darts game inline.</text>
+        <button
+          onPress={() => {
+            context.ui.showWebView({ key: 'default', url: 'index.html' });
+          }}
+        >
+          Play Darts
+        </button>
+      </vstack>
+    );
+  },
+});
+
 export default Devvit;

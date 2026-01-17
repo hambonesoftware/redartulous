@@ -72,15 +72,11 @@ export class DartGame {
   private dartGroup: THREE.Group | null = null;
 
   /**
-   * Background textures used for parallax animation. Two layers drift at
-   * different speeds to create depth. The textures are created from the
-   * same canvas as the original background pattern. These properties
-   * are initialised in the constructor.
+   * Background textures used for parallax animation. Layers drift in X only
+   * to create depth. These textures are generated from the carnival
+   * background patterns and updated when the seed changes.
    */
-  private bgTex1: THREE.Texture | null = null;
-  private bgTex2: THREE.Texture | null = null;
-  private bgMesh1: THREE.Mesh | null = null;
-  private bgMesh2: THREE.Mesh | null = null;
+  private bgLayers: { texture: THREE.Texture; mesh: THREE.Mesh; speed: number }[] = [];
   private bgSeed = 1337;
 
   /**
@@ -199,7 +195,7 @@ export class DartGame {
     this.flightTextureRed = this.makeFlightTexture("#d32f2f", "#f57c00");
     this.flightTextureBlue = this.makeFlightTexture("#1976d2", "#64b5f6");
 
-    // Create carnival parallax background. Two layers drift at different speeds.
+    // Create carnival parallax background layers.
     this.setBackgroundTextures(this.bgSeed);
 
     // Lighting: warm key light from above, a rim light to pick out edges and
@@ -383,44 +379,49 @@ export class DartGame {
     const resolvedSeed = seed >>> 0;
     this.bgSeed = resolvedSeed;
 
-    const tex1 = makeCarnivalLayerTexture(1, resolvedSeed);
-    tex1.wrapS = THREE.RepeatWrapping;
-    tex1.wrapT = THREE.RepeatWrapping;
-    tex1.repeat.set(3.5, 2.6);
+    const layerConfigs = [
+      { layer: 1, speed: 0.03, opacity: 1, size: [34, 22], z: -8.2, repeat: [3.2, 2.2] },
+      { layer: 2, speed: 0.08, opacity: 0.7, size: [34, 22], z: -7.6, repeat: [3.6, 2.4] },
+      { layer: 3, speed: 0.14, opacity: 0.55, size: [34, 22], z: -7.0, repeat: [4.0, 2.6] },
+      { layer: 4, speed: 0.22, opacity: 0.45, size: [34, 22], z: -6.4, repeat: [4.2, 2.8] },
+      { layer: 5, speed: 0.35, opacity: 0.7, size: [34, 22], z: -5.8, repeat: [3.4, 2.3] },
+    ] as const;
 
-    const tex2 = makeCarnivalLayerTexture(3, resolvedSeed + 11);
-    tex2.wrapS = THREE.RepeatWrapping;
-    tex2.wrapT = THREE.RepeatWrapping;
-    tex2.repeat.set(4, 3);
+    const nextLayers: { texture: THREE.Texture; mesh: THREE.Mesh; speed: number }[] = [];
 
-    if (!this.bgMesh1) {
-      const mat1 = new THREE.MeshBasicMaterial({ map: tex1 });
-      const geo1 = new THREE.PlaneGeometry(30, 20);
-      this.bgMesh1 = new THREE.Mesh(geo1, mat1);
-      this.bgMesh1.position.set(0, 0, -6);
-      this.scene.add(this.bgMesh1);
-    } else {
-      const mat1 = this.bgMesh1.material as THREE.MeshBasicMaterial;
-      if (this.bgTex1) this.bgTex1.dispose();
-      mat1.map = tex1;
-      mat1.needsUpdate = true;
-    }
+    layerConfigs.forEach((config, index) => {
+      const tex = makeCarnivalLayerTexture(config.layer, resolvedSeed + config.layer * 11);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(config.repeat[0], config.repeat[1]);
+      tex.offset.set(0, 0);
 
-    if (!this.bgMesh2) {
-      const mat2 = new THREE.MeshBasicMaterial({ map: tex2, transparent: true, opacity: 0.6 });
-      const geo2 = new THREE.PlaneGeometry(32, 22);
-      this.bgMesh2 = new THREE.Mesh(geo2, mat2);
-      this.bgMesh2.position.set(0, 0, -7);
-      this.scene.add(this.bgMesh2);
-    } else {
-      const mat2 = this.bgMesh2.material as THREE.MeshBasicMaterial;
-      if (this.bgTex2) this.bgTex2.dispose();
-      mat2.map = tex2;
-      mat2.needsUpdate = true;
-    }
+      const existing = this.bgLayers[index];
+      if (existing) {
+        const mat = existing.mesh.material as THREE.MeshBasicMaterial;
+        existing.texture.dispose();
+        mat.map = tex;
+        mat.opacity = config.opacity;
+        mat.needsUpdate = true;
+        existing.mesh.position.set(0, 0, config.z);
+        existing.mesh.scale.set(1, 1, 1);
+        nextLayers.push({ texture: tex, mesh: existing.mesh, speed: config.speed });
+      } else {
+        const mat = new THREE.MeshBasicMaterial({
+          map: tex,
+          transparent: config.opacity < 1,
+          opacity: config.opacity,
+          depthWrite: false,
+        });
+        const geo = new THREE.PlaneGeometry(config.size[0], config.size[1]);
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(0, 0, config.z);
+        this.scene.add(mesh);
+        nextLayers.push({ texture: tex, mesh, speed: config.speed });
+      }
+    });
 
-    this.bgTex1 = tex1;
-    this.bgTex2 = tex2;
+    this.bgLayers = nextLayers;
   }
 
   /** Main animation loop. Updates the floating target, probability circle and renders. */
@@ -470,16 +471,10 @@ export class DartGame {
     this.probRing.position.set(worldX, worldY, 0.009);
     this.probRing.scale.set(this.probRadiusCurrent, this.probRadiusCurrent, 1);
 
-    const aimOffset = Math.max(-0.03, Math.min(0.03, this.aim.x * 0.03));
-    // Animate background textures for a subtle parallax drift. Offsets
-    // wrap around automatically because repeat wrapping is enabled.
-    if (this.bgTex1) {
-      // Drift the far layer slowly
-      this.bgTex1.offset.x = (t * 0.01 + aimOffset) % 1;
-    }
-    if (this.bgTex2) {
-      // Drift the mid layer slightly faster for parallax
-      this.bgTex2.offset.x = (t * 0.02 + aimOffset * 1.3) % 1;
+    const parallaxBase = Math.max(-1, Math.min(1, this.aim.x / 0.75)) * 0.06;
+    for (const layer of this.bgLayers) {
+      layer.texture.offset.x = parallaxBase * layer.speed;
+      layer.texture.offset.y = 0;
     }
 
     // Rotate the wedge highlight to follow the current aim. Compute the

@@ -14,10 +14,8 @@
     "dir": "public",
     "entrypoints": {
       "default": {
-        "entry": "launch.html"
-      },
-      "game": {
-        "entry": "index.html"
+        "entry": "index.html",
+        "height": "regular"
       }
     }
   },

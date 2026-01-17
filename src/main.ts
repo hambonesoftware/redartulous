@@ -30,6 +30,7 @@ Devvit.addMenuItem({
       await (ctx.reddit as any).submitCustomPost({
         subredditName,
         title: 'Redartulous (Darts)',
+        entry: 'default',
       });
 
       ctx.ui.showToast('Posted! Refresh the subreddit feed.');

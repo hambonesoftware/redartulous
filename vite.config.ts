@@ -1,18 +1,16 @@
-import { defineConfig } from 'vite';
-import path from 'node:path';
+import { defineConfig } from "vite";
+import { resolve } from "path";
 
 export default defineConfig({
-  root: path.resolve(__dirname, 'src/client'),
-  base: './',
-  resolve: {
-    alias: {
-      '~': path.resolve(__dirname, 'src'),
-    },
-  },
   build: {
-    outDir: path.resolve(__dirname, 'public'),
+    outDir: "public",
     emptyOutDir: true,
-    sourcemap: true,
-    target: 'es2022',
+    assetsDir: "assets",
+    rollupOptions: {
+      input: {
+        index: resolve(__dirname, "index.html"),
+        launch: resolve(__dirname, "launch.html"),
+      },
+    },
   },
 });

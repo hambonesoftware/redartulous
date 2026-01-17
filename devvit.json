@@ -14,6 +14,9 @@
     "dir": "public",
     "entrypoints": {
       "default": {
+        "entry": "launch.html"
+      },
+      "game": {
         "entry": "index.html"
       }
     }

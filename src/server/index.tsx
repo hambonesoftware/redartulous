@@ -499,22 +499,16 @@ app.post("/internal/menu/new-post", async (_req, res: Response) => {
 
     if (!subredditName) throw new Error("Missing subredditName in context");
 
-    // Build a simple preview for the post. We don't include a high score here
-    // because the post has just been created and no one has played yet. The
-    // buildPreview helper returns a JSX element accepted by the Devvit API.
     const preview = buildPreview();
 
-    // Create the custom post with the preview attached. The call returns a
-    // Post object which could be used to further customize the preview, but
-    // passing the preview here is sufficient.
     await reddit.submitCustomPost({
-      subredditName,
-      title: "Redartulous — Darts",
-      preview,
-    } as any);
+	  subredditName,
+	  title: "Redartulous — Darts",
+	  preview,
+	  entry: "default",
+	} as any);
 
-    // IMPORTANT: Devvit validates UiResponse keys strictly.
-    // Do NOT include custom keys like "postId".
+
     res.status(200).json({
       showToast: {
         text: `Game post created. Open the newest post in r/${subredditName} to play!`,
@@ -530,6 +524,7 @@ app.post("/internal/menu/new-post", async (_req, res: Response) => {
     });
   }
 });
+
 
 // Create Devvit server and start listening.
 // Devvit will manage binding to the appropriate port when running inside Reddit.

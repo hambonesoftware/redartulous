@@ -18,25 +18,25 @@ Devvit.addMenuItem({
   location: 'subreddit',
   label: 'Create a Redartulous post',
   onPress: async (_event, ctx) => {
-    const subredditName = ctx.subredditName;
+    const { reddit, ui, subredditName } = ctx;
     if (!subredditName) {
-      ctx.ui.showToast('Open a subreddit first, then try again.');
+      ui.showToast('Open a subreddit first, then try again.');
       return;
     }
 
     try {
       // NOTE: SDK typings for submitCustomPost have changed across versions.
       // We keep the payload minimal and cast to any to stay compatible.
-      await (ctx.reddit as any).submitCustomPost({
+      await (reddit as any).submitCustomPost({
         subredditName,
-        title: 'Redartulous (Darts)',
+        title: 'Redartulous',
         entry: 'default',
       });
 
-      ctx.ui.showToast('Posted! Refresh the subreddit feed.');
+      ui.showToast('Posted! Refresh the subreddit feed.');
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      ctx.ui.showToast(`Failed to create post: ${msg}`);
+      ui.showToast(`Failed to create post: ${msg}`);
     }
   },
 });

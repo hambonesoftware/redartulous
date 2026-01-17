@@ -11,7 +11,7 @@
     }
   },
   "post": {
-    "dir": "public",
+    "dir": "dist/webroot",
     "entrypoints": {
       "default": {
         "entry": "index.html",

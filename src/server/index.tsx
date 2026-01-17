@@ -57,7 +57,7 @@ function buildPreview(highScore?: { score: number; member: string | null }): any
       {hasScore ? <text size="small">Top Score: {highScore!.score}</text> : null}
       <text size="medium">Step right up to the Carnival Midway darts challenge!</text>
       <text size="small">Hold to aim, release to throw.</text>
-      <text size="small">Enter the Midway</text>
+      <text size="small">Loading game...</text>
     </vstack>
   );
 }

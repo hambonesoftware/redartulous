@@ -1,0 +1,24 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "redartulous",
+  "permissions": {
+    "reddit": true,
+    "redis": true
+  },
+  "post": {
+    "dir": "public",
+    "entrypoints": {
+      "default": {
+        "entry": "index.html",
+        "height": "tall"
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "dev": {
+    "subreddit": "change-me"
+  }
+}

@@ -2,6 +2,15 @@
 
 This changelog summarizes the significant file‑level changes made to convert the original Three.js darts prototype into a fully runnable Devvit Web app with an authoritative server and deterministic scoring.  It covers work completed in Phases 1–5.
 
+## v3.2 (Carnival Midway Background)
+
+This release refreshes the visual identity with a Carnival Midway backdrop while keeping gameplay logic intact.
+
+### Changed
+
+- **Carnival Midway background (Option A)** – Replaced the neon arcade background with procedural carnival textures and layered parallax planes.
+- **Horizontal-only parallax** – Background drift is constrained to the X axis only, with no vertical motion.
+
 ## Added
 
 - **`devvit.json` → `menu.items`** – Added a subreddit menu item (`Start Darts Game`) that invokes `/internal/menu/new-post` so moderators can create a darts game post via the Reddit UI【465134339298065†L29-L37】.  Added `server.dir` property to ensure Devvit can locate the bundled server at runtime.

@@ -70,9 +70,9 @@ function buildDom(): void {
   startPanel.id = "startPanel";
   startPanel.innerHTML = `
     <h1>REDARTULOUS</h1>
-    <p>Aim for the highest score!</p>
+    <p>Step right up to the Carnival Midway darts challenge!</p>
     <p><em>Hold to aim, release to throw.</em></p>
-    <button id="btnStart">Start Game</button>
+    <button id="btnStart">Enter the Midway</button>
   `;
   app.appendChild(startPanel);
 

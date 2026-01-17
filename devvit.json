@@ -10,15 +10,15 @@
       ]
     }
   },
-  "post": {
-    "dir": "public",
-    "entrypoints": {
-      "default": {
-        "entry": "index.html",
-        "height": "regular"
-      }
-    }
-  },
+	"post": {
+		"dir": "webroot",
+		"entrypoints": {
+		  "default": {
+			"entry": "src/client/index.html", 
+			"height": "regular"
+		  }
+		}
+	  },
   "server": {
     "dir": "dist/server",
     "entry": "index.cjs"

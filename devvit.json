@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "redartulous",
+  "permissions": {
+    "redis": true,
+    "reddit": {
+      "enable": true,
+      "asUser": [
+        "SUBMIT_POST"
+      ]
+    }
+  },
+  "post": {
+    "dir": "public",
+    "entrypoints": {
+      "default": {
+        "entry": "index.html"
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "Start Darts Game",
+        "description": "Create a new darts game post",
+        "forUserType": "user",
+        "location": "subreddit",
+        "endpoint": "/internal/menu/new-post"
+      }
+    ]
+  },
+  "dev": {
+    "subreddit": "redartulous"
+  }
+}

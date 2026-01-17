@@ -1,0 +1,291 @@
+/* Global resets */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg-color);
+  overflow: hidden;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  color: var(--primary-text);
+}
+
+/* Neon theme variables */
+:root {
+  --bg-color: #0B1020;
+  --card-bg: rgba(4, 6, 14, 0.75);
+  --card-border: rgba(255, 255, 255, 0.12);
+  --primary-text: #F9FAFB;
+  --secondary-text: #A1A1AA;
+  --pip-active: #22D3EE;
+  --pip-used: #374151;
+}
+
+/* App container fills the viewport. */
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* Stage holds the Three.js canvas and overlays, taking the remaining height. */
+#stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Heads up display overlay in the top left. */
+#hud {
+  position: relative;
+  color: var(--primary-text);
+  background: var(--card-bg);
+  padding: calc(env(safe-area-inset-top, 0px) + 10px)
+    calc(env(safe-area-inset-right, 0px) + 16px)
+    12px
+    calc(env(safe-area-inset-left, 0px) + 16px);
+  border-radius: 0 0 14px 14px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.4), 0 0 14px rgba(244, 114, 182, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  user-select: none;
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+#hud .row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+}
+
+#hud .label {
+  opacity: 0.8;
+  font-size: 14px;
+  color: var(--secondary-text);
+}
+
+/* Increase the size of numeric values for readability */
+#hud b {
+  font-size: 24px;
+  color: var(--primary-text);
+}
+
+#hud button {
+  cursor: pointer;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.15);
+  color: var(--primary-text);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+#hud button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+#hud button:active {
+  transform: translateY(1px);
+}
+
+/* Pips row for darts left */
+#hud .pips {
+  display: flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+#hud .pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--pip-active);
+  opacity: 0.9;
+}
+#hud .pip.used {
+  background: var(--pip-used);
+  opacity: 0.5;
+}
+
+/* Pulse animation for dart pips */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.pulse {
+  animation: pulse 0.5s ease-out forwards;
+}
+
+/* Slide‑in animation for last hit */
+@keyframes slideIn {
+  0% { transform: translateX(50%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+.slide-in {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+/* Toast notification for transient messages. */
+#toast {
+  position: absolute;
+  bottom: env(safe-area-inset-bottom, 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.55);
+  padding: 8px 14px;
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  pointer-events: none;
+  user-select: none;
+  z-index: 11;
+  white-space: nowrap;
+}
+
+canvas {
+  display: block;
+}
+
+/* Start panel overlay displayed before the game begins. */
+#startPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #101218 0%, #1a1f30 100%);
+  color: #f9fafb;
+  z-index: 30;
+  padding: 20px;
+  text-align: center;
+}
+
+#startPanel h1 {
+  font-size: 48px;
+  margin: 0 0 8px 0;
+  letter-spacing: 2px;
+  font-weight: 700;
+  animation: float 4s ease-in-out infinite;
+}
+
+#startPanel p {
+  font-size: 16px;
+  margin: 4px 0;
+  opacity: 0.8;
+}
+
+#startPanel button {
+  margin-top: 20px;
+  padding: 12px 24px;
+  font-size: 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  color: #f9fafb;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+#startPanel button:hover {
+  transform: scale(1.05);
+}
+
+#startPanel button:active {
+  transform: scale(0.95);
+}
+
+/* Bounce float for the title on the start panel */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Pop animation used for HUD values when they update */
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  60% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.pop {
+  animation: pop 0.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards;
+}
+
+/* Leaderboard panel overlay */
+#lbPanel,
+#summaryPanel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  padding: 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  max-width: 320px;
+  width: 90%;
+  max-height: 70%;
+  overflow-y: auto;
+  color: #f9fafb;
+  z-index: 20;
+  display: none;
+}
+
+#lbPanel h2,
+#summaryPanel h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 18px;
+  text-align: center;
+}
+
+#lbPanel ul,
+#summaryPanel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#lbPanel li,
+#summaryPanel li {
+  margin: 4px 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+#lbPanel button,
+#summaryPanel button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#lbPanel button:active,
+#summaryPanel button:active {
+  transform: translateY(1px);
+}

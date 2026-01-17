@@ -9,7 +9,7 @@ import type {
 } from "../../shared/types/api";
 import { makeDartboardTexture } from "./boardTexture";
 import { formatLastHit } from "./scoringViz";
-import { makeNeonLayerTexture } from "./neonTextures";
+import { makeCarnivalLayerTexture } from "./carnivalTextures";
 
 /**
  * Main gameplay class. Handles all client-side rendering and interaction.
@@ -79,6 +79,9 @@ export class DartGame {
    */
   private bgTex1: THREE.Texture | null = null;
   private bgTex2: THREE.Texture | null = null;
+  private bgMesh1: THREE.Mesh | null = null;
+  private bgMesh2: THREE.Mesh | null = null;
+  private bgSeed = 1337;
 
   /**
    * Angular velocity in radians per second for the current throw. Set in
@@ -196,30 +199,8 @@ export class DartGame {
     this.flightTextureRed = this.makeFlightTexture("#d32f2f", "#f57c00");
     this.flightTextureBlue = this.makeFlightTexture("#1976d2", "#64b5f6");
 
-    // Create neon parallax background. Two layers drift at different speeds.
-    {
-      const tex1 = makeNeonLayerTexture(1, Math.floor(Math.random() * 10000));
-      tex1.wrapS = THREE.RepeatWrapping;
-      tex1.wrapT = THREE.RepeatWrapping;
-      // Increase repeat to tile the pattern nicely across wide boards
-      tex1.repeat.set(4, 3);
-      this.bgTex1 = tex1;
-      const mat1 = new THREE.MeshBasicMaterial({ map: tex1 });
-      const geo1 = new THREE.PlaneGeometry(30, 20);
-      const mesh1 = new THREE.Mesh(geo1, mat1);
-      mesh1.position.set(0, 0, -6);
-      this.scene.add(mesh1);
-      const tex2 = makeNeonLayerTexture(2, Math.floor(Math.random() * 10000));
-      tex2.wrapS = THREE.RepeatWrapping;
-      tex2.wrapT = THREE.RepeatWrapping;
-      tex2.repeat.set(4, 3);
-      this.bgTex2 = tex2;
-      const mat2 = new THREE.MeshBasicMaterial({ map: tex2, transparent: true, opacity: 0.6 });
-      const geo2 = new THREE.PlaneGeometry(32, 22);
-      const mesh2 = new THREE.Mesh(geo2, mat2);
-      mesh2.position.set(0, 0, -7);
-      this.scene.add(mesh2);
-    }
+    // Create carnival parallax background. Two layers drift at different speeds.
+    this.setBackgroundTextures(this.bgSeed);
 
     // Lighting: warm key light from above, a rim light to pick out edges and
     // a gentle ambient fill. Using MeshStandardMaterial on the darts and
@@ -379,24 +360,74 @@ export class DartGame {
     this.renderer.setSize(w, h);
   }
 
+  private hashGameId(gameId: string): number {
+    let hash = 2166136261;
+    for (let i = 0; i < gameId.length; i += 1) {
+      hash ^= gameId.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  private resolveBackgroundSeed(): number {
+    if (this.state?.seed32 !== undefined) {
+      return this.state.seed32 >>> 0;
+    }
+    if (this.state?.gameId) {
+      return this.hashGameId(this.state.gameId);
+    }
+    return 1337;
+  }
+
+  private setBackgroundTextures(seed: number): void {
+    const resolvedSeed = seed >>> 0;
+    this.bgSeed = resolvedSeed;
+
+    const tex1 = makeCarnivalLayerTexture(1, resolvedSeed);
+    tex1.wrapS = THREE.RepeatWrapping;
+    tex1.wrapT = THREE.RepeatWrapping;
+    tex1.repeat.set(3.5, 2.6);
+
+    const tex2 = makeCarnivalLayerTexture(3, resolvedSeed + 11);
+    tex2.wrapS = THREE.RepeatWrapping;
+    tex2.wrapT = THREE.RepeatWrapping;
+    tex2.repeat.set(4, 3);
+
+    if (!this.bgMesh1) {
+      const mat1 = new THREE.MeshBasicMaterial({ map: tex1 });
+      const geo1 = new THREE.PlaneGeometry(30, 20);
+      this.bgMesh1 = new THREE.Mesh(geo1, mat1);
+      this.bgMesh1.position.set(0, 0, -6);
+      this.scene.add(this.bgMesh1);
+    } else {
+      const mat1 = this.bgMesh1.material as THREE.MeshBasicMaterial;
+      if (this.bgTex1) this.bgTex1.dispose();
+      mat1.map = tex1;
+      mat1.needsUpdate = true;
+    }
+
+    if (!this.bgMesh2) {
+      const mat2 = new THREE.MeshBasicMaterial({ map: tex2, transparent: true, opacity: 0.6 });
+      const geo2 = new THREE.PlaneGeometry(32, 22);
+      this.bgMesh2 = new THREE.Mesh(geo2, mat2);
+      this.bgMesh2.position.set(0, 0, -7);
+      this.scene.add(this.bgMesh2);
+    } else {
+      const mat2 = this.bgMesh2.material as THREE.MeshBasicMaterial;
+      if (this.bgTex2) this.bgTex2.dispose();
+      mat2.map = tex2;
+      mat2.needsUpdate = true;
+    }
+
+    this.bgTex1 = tex1;
+    this.bgTex2 = tex2;
+  }
+
   /** Main animation loop. Updates the floating target, probability circle and renders. */
   private loop = (): void => {
     this.rafId = requestAnimationFrame(this.loop);
 
     const t = performance.now() * 0.001;
-
-    // Animate background textures for a subtle parallax drift. Offsets
-    // wrap around automatically because repeat wrapping is enabled.
-    if (this.bgTex1) {
-      // Drift the far layer slowly
-      this.bgTex1.offset.x = (t * 0.01) % 1;
-      this.bgTex1.offset.y = (t * 0.006) % 1;
-    }
-    if (this.bgTex2) {
-      // Drift the mid layer slightly faster for parallax
-      this.bgTex2.offset.x = (t * 0.02) % 1;
-      this.bgTex2.offset.y = (t * 0.012) % 1;
-    }
 
     if (this.pendingShot) {
       // Lock visuals to exact server-used aim+radius.
@@ -438,6 +469,18 @@ export class DartGame {
 
     this.probRing.position.set(worldX, worldY, 0.009);
     this.probRing.scale.set(this.probRadiusCurrent, this.probRadiusCurrent, 1);
+
+    const aimOffset = Math.max(-0.03, Math.min(0.03, this.aim.x * 0.03));
+    // Animate background textures for a subtle parallax drift. Offsets
+    // wrap around automatically because repeat wrapping is enabled.
+    if (this.bgTex1) {
+      // Drift the far layer slowly
+      this.bgTex1.offset.x = (t * 0.01 + aimOffset) % 1;
+    }
+    if (this.bgTex2) {
+      // Drift the mid layer slightly faster for parallax
+      this.bgTex2.offset.x = (t * 0.02 + aimOffset * 1.3) % 1;
+    }
 
     // Rotate the wedge highlight to follow the current aim. Compute the
     // polar angle of the aim relative to the board centre and map it to a
@@ -706,6 +749,10 @@ export class DartGame {
     if (!data.ok || !data.state) return false;
 
     this.state = data.state;
+    const seed = this.resolveBackgroundSeed();
+    if (seed !== this.bgSeed) {
+      this.setBackgroundTextures(seed);
+    }
 
     if (this.state.dartsTotal > 0) {
       const ratio = this.state.dartsLeft / this.state.dartsTotal;
@@ -732,6 +779,10 @@ export class DartGame {
     }
 
     this.state = data.state;
+    const seed = this.resolveBackgroundSeed();
+    if (seed !== this.bgSeed) {
+      this.setBackgroundTextures(seed);
+    }
 
     const ratio = this.state.dartsLeft / this.state.dartsTotal;
     this.probRadiusBase = 0.48 * (0.6 + ratio * 0.4);

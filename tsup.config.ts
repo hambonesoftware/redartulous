@@ -2,7 +2,7 @@ import { defineConfig } from "tsup";
 import { builtinModules } from "node:module";
 
 export default defineConfig({
-  entry: ["src/server/index.ts"],
+  entry: ["src/server/index.tsx"],
   format: ["cjs"],
   platform: "node",
   target: "node18",

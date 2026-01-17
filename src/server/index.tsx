@@ -123,9 +123,9 @@ async function getTopScore(
 async function updatePostPreview(postId: string): Promise<void> {
   try {
     const top = await getTopScore(postId);
-    const post = await reddit.getPostById(postId);
+    const post = await reddit.getPostById(postId as `t3_${string}`);
     const preview = buildPreview(top ?? undefined);
-    await post.setCustomPostPreview(() => preview);
+    await (post as any).setCustomPostPreview(() => preview);
   } catch {
     // Fail silently — preview updates are non‑critical
   }

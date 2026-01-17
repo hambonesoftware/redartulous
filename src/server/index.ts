@@ -54,13 +54,13 @@ function buildPreview(highScore?: { score: number; member: string | null }): any
   return (
     <vstack height="100%" width="100%" alignment="middle center" gap="small">
       <text size="large">REDARTULOUS</text>
-      <text size="medium">Darts</text>
+      <text size="medium">Carnival Midway Darts</text>
       {hasScore ? (
         <text size="small">Top Score: {highScore!.score}</text>
       ) : (
-        <text size="small">Be the first to score!</text>
+        <text size="small">Step up to the big-top board!</text>
       )}
-      <text size="xsmall">Tap to play</text>
+      <text size="xsmall">Tap to play under the lights</text>
     </vstack>
   );
 }
